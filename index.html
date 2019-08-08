@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="main.css">
+    <title>Mike's Talk</title>
+
+</head>
+<body>
+    <div id="save_page">
+        <h1>Welcome To The OG Messenger</h1>
+        <br><br>
+        <form>
+            <h3>Enter the name that you will like to use for the chat</h3>
+            <br>
+            Username: <input type="text" id="save_name_box">
+            <button id="save">Save</button>
+        </form>
+    </div>
+
+    <div id = "chat_page">
+        <div id="header">
+            <img  id = "chat_image" src="chatbubbles.png" width = "100px">
+            <h1>Firebase Chatroom</h1>
+        </div>
+
+
+        <div id="chatroom">
+    
+        </div>
+
+        <br><br>
+
+        <form>
+
+            <input type="text" id="user_chat">
+            <button id="submit">submit chat</button>
+        </form>
+    </div>
+
+    <!-- The core Firebase JS SDK is always required and must be listed first -->
+    <script src="https://www.gstatic.com/firebasejs/6.3.4/firebase.js"></script>
+
+    <!-- TODO: Add SDKs for Firebase products that you want to use
+        https://firebase.google.com/docs/web/setup#config-web-app -->
+
+    <script>
+        // Your web app's Firebase configuration
+        var firebaseConfig = {
+            apiKey: "AIzaSyCEPCH2e-lh1okLHohoGBw-6KM07KQbJvQ",
+            authDomain: "fir-chat-5d019.firebaseapp.com",
+            databaseURL: "https://fir-chat-5d019.firebaseio.com",
+            projectId: "fir-chat-5d019",
+            storageBucket: "",
+            messagingSenderId: "877246962273",
+            appId: "1:877246962273:web:89553f16e6c94b9e"
+        };
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        // Initialize a connection to our database
+        let db = firebase.firestore();
+
+
+        // get references
+        let userInputTextBox = document.getElementById("user_chat");
+        let submitButton = document.getElementById("submit");
+        let chatroomDiv = document.getElementById("chatroom");
+        let saveNameBox = document.getElementById("save_name_box");
+        let saveButton = document.getElementById("save");
+        let savePage = document.getElementById("save_page");
+        let chatPage = document.getElementById("chat_page")
+
+        let username;
+        
+        // setup onclick for the save button
+        saveButton.onclick = function(re) {
+            re.preventDefault();
+            username = saveNameBox.value;
+            chatPage.style.display = "block";
+            savePage.style.display = "none";
+            chatroomDiv.scrollTop = chatroomDiv.scrollHeight;
+        }
+
+        // set up onclick for submitButton
+        submitButton.onclick = function(event) {
+            //prevent the page from reloading 
+            event.preventDefault();
+
+            //get the UNIX timestamp
+            let now = new Date();
+            let timestamp = new Date().getTime();
+            console.log("Now: " + now);
+            console.log("Timestamp: " + timestamp);
+
+            //extract the hours, minutes, and seconds 
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            let seconds = now.getSeconds();
+            let month = now.getMonth(); // this is the month but it starts with 0, so you have to add one when you are adding it to the database
+            let day = now.getDate();  // This is the OG day
+
+            console.log(hours, minutes, seconds,month,day)
+
+            //save some data to our database
+            db.collection("chatroom").add({
+                "chat": userInputTextBox.value,
+                "timestamp": timestamp,
+                "hours": hours,
+                "minutes": minutes,
+                "seconds": seconds,
+                "month": ++month,
+                "day": day,
+                "username": username
+            })
+
+            //console.log somethign after our data has successfully stored in our database
+            .then(function(ref) {
+                console.log("data stored successfully with ref #: " + ref.id);
+            });
+
+            // clear userInputTextBox
+            userInputTextBox.value = "";
+        }
+
+        //everytime the database updates, retreive th data
+        db.collection("chatroom").orderBy("timestamp").onSnapshot(function(snapshot) {
+
+            //clear the innerHTML of chatroomDiv
+            chatroomDiv.innerHTML = "";
+            
+            //iterate through the database and add the info to chatroomDiv
+            for (let i = 0; i < snapshot.docs.length; i++) {
+                let snap = snapshot.docs[i].data();
+                chatroomDiv.innerHTML += "<img class='username_image' src ='randomUser.png' width='60px'>";
+                chatroomDiv.innerHTML += `<p class="chat_message">`+  snap.month + ":" + snap.day + ":" + snap.hours + ":" + snap.minutes + ":" + snap.seconds + " " + `<span class="chat_userName">`+ snap.username +  "</span>" + "<br><br>" + snap.chat + "</p><br><br><br>";
+                chatroomDiv.scrollTop = chatroomDiv.scrollHeight;
+                console.log(chatroomDiv.scrollHeight, chatroomDiv.scrollTop); 
+            }
+        });
+
+    </script>
+
+  
+</body>
+</html>
